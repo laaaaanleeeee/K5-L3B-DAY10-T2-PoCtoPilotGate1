@@ -54,9 +54,6 @@ Một điều còn chưa chắc: Cổng của mình tin tracking DB. Nếu ngày
 *(Hạnh tự viết mục này theo mẫu ở trên: phần việc, đóng góp cụ thể, bằng chứng, exit ticket.)*
 
 ## VuongQuangThang-2A202603855
-
-## VuongQuangThang-<MSSV>
-
 ### Phần việc phụ trách
 
 - **Vai trong bàn:** Sản phẩm và kinh doanh[cite: 2, 7].
