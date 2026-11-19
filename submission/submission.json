@@ -1,12 +1,16 @@
 {
-  "team": "",
-  "members": [],
-  "incident": "",
-  "decision_v1": "",
-  "decision_v2": "",
+  "team": "K5-L3B-DAY10-T2-PoCtoPilotGate1",
+  "members": [
+    "LeHaiLan-2A202603915",
+    "LuongThiHongHanh-2A202603748",
+    "VuongQuangThang-2A202603855"
+  ],
+  "incident": "S6",
+  "decision_v1": "Tiếp tục",
+  "decision_v2": "Tiếp tục",
   "three_lines": {
-    "environment_assumption": "",
-    "reduce_or_prevent": "",
-    "measure_in_pilot": ""
+    "environment_assumption": "tracking DB ghi đúng ngày giao, nguyên nhân, hãng và tài xế của từng kiện.",
+    "reduce_or_prevent": "NGĂN với lỗi ghi sai kiện khi tracking DB đúng và với lỗi vượt trần 2 lỗi/hãng/ngày; chỉ GIẢM với ca khách nêu nhầm kiện hoặc tracking sai, vì cổng tin tracking DB.",
+    "measure_in_pilot": "tỉ lệ tracking DB sai ngày giao hoặc nguyên nhân, tỉ lệ ca chuyển người và ROI khi tải thật, và phản hồi của hãng về lỗi đã ghi."
   }
 }
