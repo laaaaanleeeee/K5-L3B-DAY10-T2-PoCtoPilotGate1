@@ -268,7 +268,7 @@ Vì sao có thể sai: ngày giao và nguyên nhân do máy quét và người n
 
 <a id="c6"></a>
 
-## C6 · Câu 3.4 · Fault tree TRƯỚC khi sửa (mã lần chạy: `R-S6-before-20261119-213234-65e7cb`)
+## C6 · Câu 3.4 · Fault tree TRƯỚC khi sửa (mã lần chạy: `R-S6-before-20261119-214310-65e7cb`)
 
 **Khung tư duy.** Đi từ **tác hại** ngược về nguyên nhân, không đi từ lỗi mình tình cờ thấy. Mỗi tầng hỏi "điều gì phải xảy
 ra thì điều trên mới xảy ra", nối bằng **HOẶC** (một trong các nhánh là đủ) hoặc **VÀ** (phải đồng thời). Một biện pháp tốt
@@ -350,7 +350,7 @@ Thẻ S5 dùng mục này cho một con số kinh doanh: chi phí mỗi ticket t
 
 <a id="c9"></a>
 
-## C9 · Câu 3.7 · Fault tree SAU khi sửa (mã lần chạy: `R-S6-after-20261119-213234-65e7cb`)
+## C9 · Câu 3.7 · Fault tree SAU khi sửa (mã lần chạy: `R-S6-after-20261119-214310-65e7cb`)
 
 Vẽ lại cây ở C6. Ở mỗi nhánh đã xử lý, thêm một nút `VÀ [gate … hỏng]` và ghi:
 
@@ -394,7 +394,7 @@ Ghi các dòng đổi sau sự cố. Mỗi dòng vẫn phải có một PIC có 
 
 | # nhóm | Trạng thái mới (Xong / Chưa / Không áp dụng) | Bằng chứng mới (mã lần chạy, mục phiếu, số trong report) | PIC |
 |---|---|---|---|
-| 1 Chất lượng | Xong | `R-S6-after-20261119-213234-65e7cb`: pass_rate 1.0, pass_k 1.0 trên gói sự cố; bộ nền 65/65 (`R-base-after-20261119-213028-e3807b`) | Lê Hải Lân |
+| 1 Chất lượng | Xong | `R-S6-after-20261119-214310-65e7cb`: pass_rate 1.0, pass_k 1.0 trên gói sự cố; bộ nền 65/65 (`R-base-after-20261119-213028-e3807b`) | Lê Hải Lân |
 | 8 Con người, pháp lý | Xong | Gói sự cố S6: lỗi hãng oan 0, `strike_gate` giữ trần 2 lỗi/hãng/ngày; người nhận khiếu nại của hãng: NV-OANH | Lương Thị Hồng Hạnh |
 | 7 Vận hành | Xong | `monitors.py` có thêm `fault_on_non_worst_parcel_rate` và `max_faults_per_carrier_day`; Runbook 4–5 dưới đây | Lương Thị Hồng Hạnh |
 
@@ -430,11 +430,11 @@ Cột v1 nằm ở Phiếu B mục B8; không sửa cột đó.
 |---|---|
 | Commit ký tiêu chí | `97629a9` (giống v1) |
 | Hash chốt cổng vòng 1 | `07eda9aa` (giống v1) |
-| Mã lần chạy dùng làm bằng chứng | thẻ, mốc base: `R-S6-before-20261119-213234-65e7cb` · prepared: `R-S6-prepared-20261119-213234-65e7cb` · after: `R-S6-after-20261119-213234-65e7cb` |
+| Mã lần chạy dùng làm bằng chứng | thẻ, mốc base: `R-S6-before-20261119-214310-65e7cb` · prepared: `R-S6-prepared-20261119-214310-65e7cb` · after: `R-S6-after-20261119-214310-65e7cb` |
 | Còn dòng "vượt trần" nào trong report? (hàng chờ, chi phí, ROI, trần tiền, pháp lý) | Không ở mốc after (`violations` rỗng): chờ lâu nhất 0 phút, 0 ca ùn, chi phí 7.462đ ≤ 8.500đ và < 10.000đ làm tay, ROI 0.34 ≥ 0.15, tổng hoàn tự động ngày tệ nhất 38.000đ so với trần 2.000.000đ, không ca lộ PII. Ở mốc prepared còn vượt: ROI -0.35 |
 | Kho hoặc hãng có số xấu nhất: kho `HCM`. Nếu chỉ nhìn phân khúc này, quyết định có đổi không? *(Khối "theo kho và hãng" trong output `lab10.eval` / `lab10.grade`, hoặc mục `by_segment` trong `report.json`.)* | Kho `HCM` tốn 5.661đ/ticket (đắt nhất, vẫn rẻ hơn làm tay 10.000đ), pass_rate 1.0, hoàn sai 0, lỗi oan 0; hãng nhiều lỗi nhất là `GHSH` (35 lần chạy, 0 lỗi oan). Nếu chỉ nhìn HCM thì quyết định không đổi |
 | Quyết định (khoanh một) | **Tiếp tục** · Thu hẹp · Cải tiến thêm · Dừng |
-| Bằng chứng 1: mã lần chạy + chỉ số bắt buộc nào đạt / chưa | `R-S6-after-20261119-213234-65e7cb`: đạt cả 5 chỉ số bắt buộc trên gói sự cố (pass_rate 1.0, pass_k 1.0, hoàn sai 0đ, lỗi hãng oan 0, lộ PII 0); mốc base là 0.3333 / 0.3333 / 270.000đ / 40 / 0 |
+| Bằng chứng 1: mã lần chạy + chỉ số bắt buộc nào đạt / chưa | `R-S6-after-20261119-214310-65e7cb`: đạt cả 5 chỉ số bắt buộc trên gói sự cố (pass_rate 1.0, pass_k 1.0, hoàn sai 0đ, lỗi hãng oan 0, lộ PII 0); mốc base là 0.3333 / 0.3333 / 270.000đ / 40 / 0 |
 | Bằng chứng 2 | Cùng run: 3 ngưỡng `business_ops` đạt (chi phí 7.462đ ≤ 8.500đ, ROI 0.34 ≥ 0.15, ùn 0 ≤ 0) và tỉ lệ chuyển người 0.25 ≤ 0.35 |
 | Bằng chứng 3 | Bộ nền `R-base-after-20261119-213028-e3807b`: 65/65 đạt, không ca nào hỏng thêm (`regression ✅`); `grade --incident S6`: `visible ✅`, `monitor ✅` |
 | Khớp dòng nào trong `decision_rule` đã ký? | "Tiếp tục": đạt đủ 5 chỉ số bắt buộc và 3 ngưỡng `business_ops` trên cả bộ nền lẫn gói sự cố, không còn dòng vượt trần. Report ghi "Được phép cân nhắc Tiếp tục" |
@@ -446,7 +446,7 @@ Cột v1 nằm ở Phiếu B mục B8; không sửa cột đó.
 
 **Chỉ ở v2**
 - Quyết định đổi hay giữ so với v1? Vì con số nào: giữ Tiếp tục. v1 chỉ dựa trên bộ nền; v2 thêm gói sự cố S6, nơi pass_rate từ 0.3333 lên 1.0 và lỗi hãng oan từ 40 về 0 sau khi sửa.
-- Report tự kiểm tra: mã lần chạy `R-S6-grade-20261119-213233-65e7cb` · ô nào còn đỏ (nguyên nhân × tầng): kiểm `1 integrity` ❌ do file khóa bị đổi dấu xuống dòng (CRLF) trên máy một thành viên, không phải thay đổi nội dung; hash khớp `MANIFEST.json` khi chuyển về LF.
+- Report tự kiểm tra: mã lần chạy `R-S6-grade-20261119-214309-65e7cb` · ô nào còn đỏ (nguyên nhân × tầng): không ô nào đỏ, kết luận `PASS-VISIBLE` (5 kiểm ✅; `4 hidden` chưa chạy được ở máy này). Lưu ý: ban đầu `1 integrity` ❌ vì dấu xuống dòng CRLF của file khóa trên máy một thành viên (hash khớp `MANIFEST.json` khi về LF), đã xử lý.
 - Cổng vòng 1 (mốc prepared) đã đỡ được gì trước khi bàn biết sự cố, và bỏ sót gì: đỡ lỗi hãng oan từ 40 xuống 10 và đưa hoàn sai trên bộ nền về 0; bỏ sót lỗi chọn nhầm kiện (hoàn sai vẫn 270.000đ) và trần lỗi mỗi hãng mỗi ngày.
 - Report ghi "được phép cân nhắc Tiếp tục" hay "không đủ căn cứ"? Quyết định của bàn có khớp không: ghi "Được phép cân nhắc Tiếp tục" ở mốc after (mọi ngưỡng đã ký đạt); quyết định của bàn khớp.
 - Một thứ bộ thử hôm nay chưa đo, và nó ảnh hưởng quyết định ra sao: chưa có bài kiểm tra ẩn và độ phủ pilot mới 0.6667 (kho DN, CT bị loại); ROI sau sửa còn 0.34 do nhiều ca chuyển người, gần ngưỡng 0.15 nên cần đo lại khi tải thật.
