@@ -255,9 +255,9 @@ Kiểm bằng gì (hàm trong `guards.py`, dòng report nào): …
 
 ### Câu 3.3 · Một giả định về môi trường mà người thiết kế đã ngầm tin, nhưng nhiều khả năng sai ngoài thực tế
 
-Giả định (thứ nằm NGOÀI phần mềm): …
+Giả định (thứ nằm NGOÀI phần mềm, dành cho vai Vận hành và pháp lý): dữ liệu nhân viên, carrier/tracking, chính sách và phê duyệt còn hiệu lực; người dùng không niêm yết PII ngoài quyền xử lý; bên thứ ba chỉ nhận dữ liệu cần thiết.
 
-Vì sao có thể sai: …
+Vì sao có thể sai: vai diễn/approval có thể hết hạn hoặc bị thu hồi; policy có thể đổi không đồng bộ; tracking có thể trễ/thiếu nguyên nhân; chữ khách gõ có thể chứa PII không thuộc đơn; người đứng tên duyệt có thể không còn trực ca.
 
 ---
 
@@ -290,9 +290,9 @@ thường biến một nhánh HOẶC thành VÀ: tác hại chỉ còn xảy ra 
 
 | Lá | Specification bị vi phạm (phần mềm phải làm gì) | Giả định môi trường đã sai (thế giới ngoài phần mềm) |
 |---|---|---|
-| [1] | | |
-| [2] | | |
-| [3] | | |
+| [1] | Chỉ ghi lỗi hãng khi tracking có recorded_cause hợp lệ và đúng carrier; không được ghi oan | Giả định “tracking luôn có nguyên nhân cuối cùng” có thể sai |
+| [2] | Không gửi tên/số điện thoại/địa chỉ ra bên thứ ba | Giả định người dùng chỉ nhập dữ liệu của đơn, không PII không liên quan, có thể sai |
+| [3] | Khoản vượt hạn mức và thay đổi policy phải có approval còn hiệu lực của nhân viên đứng tên | Giả định approver_id luôn còn hiệu lực và PIC đang trực, có thể sai |
 
 **Ví dụ mẫu một nhánh (bộ nền, đừng chép):** đỉnh "hãng VNX nhận lỗi oan cho đơn O-1002" ← [1] agent dùng độ trễ 5 ngày ←
 model lấy số trong ticket đè lên DB (`T-002@55`). Spec bị vi phạm: độ trễ dùng để ghi lỗi phải lấy từ tracking DB. Giả định
@@ -369,7 +369,7 @@ Vẽ lại cây ở C6. Ở mỗi nhánh đã xử lý, thêm một nút `VÀ [g
 
 | Rủi ro | Khả năng | Tác động | Người phụ trách (PIC, một người) | Dấu hiệu (metric nào, ngưỡng nào) | Xử lý | Ảnh hưởng bước đánh giá | Nhóm chức năng (GOVERN / MAP / MEASURE / MANAGE) |
 |---|---|---|---|---|---|---|---|
-| | | | | | | | |
+| PII tiếp tục rời hệ thống ra bên thứ ba khi payload chứa name/phone/street hoặc payload không được ẩn danh | Trung bình | Người nhận/khách mất kiểm soát dữ liệu; hãng và LogiX chịu rủi ro pháp lý, uy tín | Lương Thị Hồng Hạnh (vai Vận hành và pháp lý) | `pii_leaks` trong report: bất kỳ 1 lần là ngưỡng Đỏ; monitor PII trong trace | Giữ config legal chặn ba trường, dừng `notify_carrier`, chuyển ticket cho `NV-HANH`, đối soát `NV-OANH`, tắt công tắc tối đa 10 phút | Nếu monitor/guard không bắt được PII thì Gate 1 không thể chọn Tiếp tục | GOVERN / MANAGE |
 
 Quy tắc: **mỗi dòng phải đổi được một quyết định.** Cột "Dấu hiệu" phải là một metric có trong `monitors.py` hoặc trong report.
 
@@ -385,20 +385,22 @@ Ghi các dòng đổi sau sự cố. Mỗi dòng vẫn phải có một PIC có 
 
 | # nhóm | Trạng thái mới (Xong / Chưa / Không áp dụng) | Bằng chứng mới (mã lần chạy, mục phiếu, số trong report) | PIC |
 |---|---|---|---|
-| | | | |
+| 3 | Chưa (chờ report thẻ) | Báo cáo PII trên thẻ; config legal hiện đã chặn name/phone/street | Lương Thị Hồng Hạnh |
+| 7 | Chưa (chờ report thẻ) | B7.5; thay đổi người trực, số ca, SLA và kiểm mẫu sau grade | Lương Thị Hồng Hạnh |
+| 8 | Chưa (chờ report thẻ) | C3/C4/C7/C10 và dữ kiện phần riêng thẻ | Lương Thị Hồng Hạnh |
 | | | | |
 
 ### Runbook 4 · Sau sự cố trên thẻ (vòng 2)
 
 | Câu hỏi | Trả lời |
 |---|---|
-| Tín hiệu nào ở Runbook 2 (Phiếu B mục B7.5) lẽ ra phải báo trước sự cố này? Nó đã có chưa? | |
-| Bàn thêm hoặc đổi ngưỡng nào, từ bao nhiêu thành bao nhiêu? | |
-| Bàn đổi gì về **người** (số người trực, ai đứng tên, ai được gọi)? | |
-| Bàn đổi gì về **phạm vi** hoặc **quy trình** (kiểm mẫu, ghi chú giải thích, trần)? | |
-| Nói gì với bên thứ ba bị ảnh hưởng (hãng, shop, người nhận, nhân viên duyệt), ai nói, trong bao lâu? | |
-| Dữ liệu cá nhân nào đã rời hệ thống mà không thu hồi được? Báo cho ai? | |
-| Sự cố lộ ra trước qua số máy đo, phản hồi của người, hay đọc nội dung? Nguồn nào bàn chưa có? | |
+| Tín hiệu nào ở Runbook 2 (Phiếu B mục B7.5) lẽ ra phải báo trước sự cố này? Nó đã có chưa? | `wrongful_refund_vnd`, `wrongful_carrier_faults`, `pii_leaks`, hàng chờ và tổng hoàn/ngày; các trường PII đã có, cần cập nhật giá trị thực sau khi có thẻ |
+| Bàn thêm hoặc đổi ngưỡng nào, từ bao nhiêu thành bao nhiêu? | Chỉ điền sau report: ngưỡng vàng/đỏ, số người trực, SLA, kiểm mẫu và trần theo bằng chứng thẻ |
+| Bàn đổi gì về **người** (số người trực, ai đứng tên, ai được gọi)? | Giữ `NV-TUNG` làm PIC, `NV-HANH` làm approver, `NV-OANH` đối soát bên thứ ba; tăng người trực hoặc đưa 100% quyết định vào duyệt nếu report chứng minh |
+| Bàn đổi gì về **phạm vi** hoặc **quy trình** (kiểm mẫu, ghi chú giải thích, trần)? | Tắt công tắc liên quan, thu hẹp pilot hoặc tăng kiểm mẫu; giữ kiểm soát theo dữ liệu report, không thu hẹp về 0 |
+| Nói gì với bên thứ ba bị ảnh hưởng (hãng, shop, người nhận, nhân viên duyệt), ai nói, trong bao lâu? | Trong 30 phút khi phát hiện: `NV-TUNG` thông báo tạm dừng, `NV-OANH` đối soát và giải trình; `NV-HANH` xác nhận hành động với nhân viên duyệt |
+| Dữ liệu cá nhân nào đã rời hệ thống mà không thu hồi được? Báo cho ai? | `name`, `phone`, `street` nếu lộ qua `notify_carrier`; báo `NV-TUNG`/PIC và `NV-OANH`, đóng ticket, đánh dấu incident theo quy định nội bộ |
+| Sự cố lộ ra trước qua số máy đo, phản hồi của người, hay đọc nội dung? Nguồn nào bàn chưa có? | Phải điền từ report thẻ và trace; nguồn chưa có là dữ liệu bên thứ ba/production phản ánh thiệt hại thực |
 
 ### Runbook 5 · Ba kịch bản "nếu … thì …" cho tuần đầu chạy thử thật
 

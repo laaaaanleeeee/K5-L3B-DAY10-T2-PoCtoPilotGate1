@@ -24,8 +24,8 @@ rồi mới chạy đánh giá. Khối 1 không sửa code.
 
 ### Câu 1.2 · Mục tiêu nhìn từ hai người
 
-- Chị Oanh, kế toán đối soát (không dùng trợ lý, nhưng phải khớp sổ với hãng và shop mỗi tuần): …
-- Chị Hạnh, trưởng ca CSKH (phải duyệt những ca trợ lý chuyển sang): …
+- Chị Oanh, kế toán đối soát (không dùng trợ lý, nhưng phải khớp sổ với hãng và shop mỗi tuần): mỗi tuần có một bản ghi đối soát có thể truy vết từng khiếu nại hoàn tiền/lỗi hãng; không phát sinh hoàn sai, lỗi ghi oan hoặc dữ liệu cá nhân gửi sai trong bộ thử.
+- Chị Hạnh, trưởng ca CSKH (phải duyệt những ca trợ lý chuyển sang): ca trợ lý chuyển sang con người phải có lý do, giá trị và bằng chứng đủ để duyệt trong SLA 60 phút; hàng chờ không vượt sức duyệt 6 ca/giờ/người và trưởng ca luôn biết ai đứng tên khoản vượt hạn mức.
 
 ---
 
@@ -48,12 +48,12 @@ trợ lý có đang gây thiệt hại cho bên ngoài LogiX không; không có 
 
 | | Offline, cho MỘT bước (câu 1.3) | Telemetry production (câu 1.4) |
 |---|---|---|
-| **Bước / hành vi được đo** | | |
-| **Thước đo** (một câu, có đơn vị) | | |
-| **Dữ liệu** (lấy ở đâu, bao nhiêu, ai gán nhãn) | | |
-| **Cách tính** (công thức, mẫu số, cách xử lý ca thiếu dữ liệu) | | |
-| **Khung thời gian / ngưỡng báo động** | (không áp dụng) | |
-| **Điểm mù** (thước đo này KHÔNG thấy gì) | | |
+| **Bước / hành vi được đo** | Bước chuyển ticket sang người duyệt và ghi quyết định vận hành/pháp lý | Dữ liệu ngoại tuyến không đủ: quan sát hành vi phát sinh hoàn tiền sai, ghi lỗi hãng oan và rò rỉ PII ra hãng |
+| **Thước đo** (một câu, có đơn vị) | Tỉ lệ ticket chuyển duyệt có ghi đầy đủ lý do; tỉ lệ ticket hoàn tiền vượt trần/customer đã bị chuyển cho người thay vì ghi tự động | Số sự kiện `wrongful_refund_vnd`, `wrongful_carrier_faults`, `pii_leaks` và số ticket ở hàng chờ sau 60 phút trong cửa sổ mỗi ngày |
+| **Dữ liệu** (lấy ở đâu, bao nhiêu, ai gán nhãn) | Trace `escalated/recheck`, `ctx.events`, `ctx.gates` và `config/operating_gates.json`; nhãn đúng/sai được lấy từ kết quả ticket và sổ ledger của bộ thử | Report production mỗi ca/ngày, trace ẩn danh, ledger_rows/fault_rows/notify_carrier và dữ liệu khiếu nại của khách; người duyệt/CSKH xác nhận sự cố |
+| **Cách tính** (công thức, mẫu số, cách xử lý ca thiếu dữ liệu) | Ticket đáp ứng điều kiện → đếm là hợp lệ nếu lý do + người duyệt/phê duyệt có trong trace; thiếu trace thì loại khỏi tỷ lệ đầy đủ và tạo cảnh báo dữ liệu thiếu | Tính tổng thiệt hại/ngày và số ca vượt SLA; báo động khi bất kỳ `wrongful_refund_vnd > 0`, `wrongful_carrier_faults > 0`, `pii_leaks > 0`, hoặc `queue_stuck_max > 0` |
+| **Khung thời gian / ngưỡng báo động** | (không áp dụng) | Cửa sổ 1 ca 8 giờ hoặc 1 ngày vận hành; bất kỳ sự kiện PII/hãng oan hoặc vượt trần là Đỏ ngay; chờ >60 phút là Đỏ |
+| **Điểm mù** (thước đo này KHÔNG thấy gì) | Không phát hiện tự động lỗi thực tế trong dữ liệu tracking hoặc chính sách bên ngoài chưa được nạp vào trace | Không có nhãn trước từ khách/hãng; không biết thiệt hại chưa được báo cáo và không phát hiện PII đã rời hệ thống nếu kênh bên thứ ba không gửi telemetry |
 
 **Ví dụ mẫu (bước "chọn độ trễ" của agent, đừng chép):**
 Thước đo: tỉ lệ lần chạy mà độ trễ agent dùng để tính tiền khác độ trễ theo tracking DB. Dữ liệu: sự kiện `proposal.delay_days_used`
