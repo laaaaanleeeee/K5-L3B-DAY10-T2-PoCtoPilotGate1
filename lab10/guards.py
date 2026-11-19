@@ -33,10 +33,61 @@ from . import helpers as H  # noqa: F401
 from .tools import Verdict
 
 
+# Trường duy nhất được gửi sang hãng vận chuyển (bên thứ ba). Chữ khách tự gõ (customer_note) và liên hệ người nhận
+# (recipient_contact) KHÔNG nằm trong danh sách này.
+CARRIER_ALLOWED_FIELDS = ("order_id", "parcel_id", "district", "delay_days")
+
+
+def _db_truth(ctx, order_id):
+    """Quyền lợi theo nguồn sự thật: bưu kiện trễ nhất theo tracking DB, chính sách có hiệu lực tại as_of."""
+    order = ctx.tools.lookup_order(order_id)
+    pol = H.effective_policy(ctx.tools.lookup_policies(), ctx.as_of)
+    if order is None or pol is None:
+        return None, None, None
+    worst = max(order["parcels"], key=lambda p: H.db_delay_days(p, ctx.as_of))
+    delay = H.db_delay_days(worst, ctx.as_of)
+    cause = worst.get("delay_cause") or ("CARRIER" if delay > 0 else None)
+    return order, pol, H.entitlement_vnd(pol, order, delay, cause)
+
+
 def pre_guard(ctx):
     return Verdict.allow()
 
 
 def write_gate(ctx, action):
     # action = {"tool": "issue_refund", "ticket_id":..., "order_id":..., "amount_vnd":..., "payer":..., ...}
+    tool = action.get("tool")
+
+    # Cổng 1 (B4 WRONG amount_vnd / pre-mortem kỹ thuật): tiền hoàn không được vượt quyền lợi tính từ DB.
+    # Số ngày khách khai, chỉ thị trong ticket hay chính sách cũ làm số tiền cao hơn DB thì chuyển người duyệt.
+    if tool == "issue_refund":
+        order, pol, entitled = _db_truth(ctx, action["order_id"])
+        if order is None:
+            return Verdict.escalate("không đối chiếu được đơn/chính sách với DB: chuyển người duyệt")
+        if ctx.tools.ledger_rows(order_id=action["order_id"]):
+            ctx.log("refund_gate", reason="order_already_in_ledger", order_id=action["order_id"])
+            return Verdict.escalate("đơn đã có dòng hoàn trong sổ cái: chuyển người duyệt")
+        if int(action["amount_vnd"]) > entitled:
+            ctx.log("refund_gate", reason="amount_above_db_entitlement", asked=int(action["amount_vnd"]), entitled=entitled)
+            return Verdict.escalate(f"số tiền {int(action['amount_vnd'])}đ vượt quyền lợi theo DB {entitled}đ: chuyển người duyệt")
+
+    # Cổng 2 (B4 INVALID / pre-mortem pháp lý): chỉ ghi lỗi cho hãng khi DB xác nhận trễ thật và nguyên nhân hợp lệ.
+    if tool == "file_carrier_fault":
+        order = ctx.tools.lookup_order(action["order_id"])
+        pol = H.effective_policy(ctx.tools.lookup_policies(), ctx.as_of)
+        parcel = next((p for p in (order or {"parcels": []})["parcels"] if p["parcel_id"] == action.get("parcel_id")), None)
+        if order is None or pol is None or parcel is None:
+            return Verdict.deny("không xác minh được bưu kiện trong DB: không ghi lỗi hãng")
+        if not H.carrier_at_fault(pol, parcel, H.db_delay_days(parcel, ctx.as_of)):
+            ctx.log("fault_gate", reason="db_does_not_support_fault", parcel_id=parcel["parcel_id"])
+            return Verdict.deny("DB không xác nhận hãng có lỗi: không ghi lỗi hãng")
+
+    # Cổng 3 (B4 PERTURBED / pre-mortem pháp lý): dữ liệu gửi bên thứ ba chỉ gồm các trường cho phép.
+    if tool == "notify_carrier":
+        payload = action.get("payload") or {}
+        clean = {k: v for k, v in payload.items() if k in CARRIER_ALLOWED_FIELDS}
+        if clean != payload:
+            ctx.log("pii_gate", dropped=sorted(set(payload) - set(clean)))
+            return Verdict.modify("chỉ gửi các trường cho phép sang hãng", payload=clean)
+
     return Verdict.allow()
