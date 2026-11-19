@@ -50,6 +50,32 @@ def _db_truth(ctx, order_id):
     return order, pol, H.entitlement_vnd(pol, order, delay, cause)
 
 
+def _fault_target(ctx, order, pol):
+    """VÒNG 2 (thẻ S6): đơn vị chịu lỗi là KIỆN, không phải đơn. Trả về (trạng thái, kiện).
+
+    ok        = đúng một kiện đủ căn cứ (trễ đủ ngày, nguyên nhân thuộc lỗi hãng theo DB)
+    ambiguous = từ hai kiện trở lên đủ căn cứ mà ticket không nói kiện nào: hệ thống KHÔNG được đoán
+    conflict  = ticket nêu một kiện nhưng DB không xác nhận kiện đó
+    none      = không kiện nào đủ căn cứ
+    """
+    eligible = [p for p in order["parcels"] if H.carrier_at_fault(pol, p, H.db_delay_days(p, ctx.as_of))]
+    named = ctx.ticket.get("parcel_id")
+    if named:
+        parcel = next((p for p in order["parcels"] if p["parcel_id"] == named), None)
+        if parcel is not None and parcel in eligible:
+            return "ok", parcel
+        return "conflict", parcel
+    if len(eligible) == 1:
+        return "ok", eligible[0]
+    return ("ambiguous" if eligible else "none"), None
+
+
+def _strike_cap_reached(ctx, carrier_id):
+    """Trần đã thống nhất với Ops: từ lỗi thứ 3 của cùng một hãng trong ngày phải có người duyệt."""
+    cap = ctx.tools.ops_limits().get("max_auto_strikes_per_carrier_per_day")
+    return cap is not None and len(ctx.tools.fault_rows(carrier_id=carrier_id)) >= cap
+
+
 def pre_guard(ctx):
     return Verdict.allow()
 
@@ -71,16 +97,32 @@ def write_gate(ctx, action):
             ctx.log("refund_gate", reason="amount_above_db_entitlement", asked=int(action["amount_vnd"]), entitled=entitled)
             return Verdict.escalate(f"số tiền {int(action['amount_vnd'])}đ vượt quyền lợi theo DB {entitled}đ: chuyển người duyệt")
 
+        # Cổng 4 (vòng 2, S6): xác định ĐÚNG KIỆN chịu lỗi TRƯỚC khi ghi tiền. Không đoán khi đầu vào không đủ.
+        if entitled > 0:
+            status, target = _fault_target(ctx, order, pol)
+            if status in ("ambiguous", "conflict"):
+                ctx.log("parcel_gate", reason=status, named=ctx.ticket.get("parcel_id"))
+                return Verdict.escalate("không xác định được kiện nào chịu lỗi (ticket không rõ hoặc lệch DB): chuyển người duyệt")
+            # Cổng 5 (vòng 2, S6): trần Ops, từ lỗi tự động thứ 3 của cùng một hãng trong ngày phải có người duyệt.
+            if status == "ok" and _strike_cap_reached(ctx, target["carrier_id"]):
+                ctx.log("strike_gate", carrier_id=target["carrier_id"])
+                return Verdict.escalate(f"hãng {target['carrier_id']} đã đủ số lỗi tự động trong ngày (trần Ops): chuyển người duyệt")
+
     # Cổng 2 (B4 INVALID / pre-mortem pháp lý): chỉ ghi lỗi cho hãng khi DB xác nhận trễ thật và nguyên nhân hợp lệ.
+    # Vòng 2 (S6): ghi cho ĐÚNG KIỆN (hãng, tài xế, số ngày của kiện đó), không mặc định kiện đầu của đơn.
     if tool == "file_carrier_fault":
         order = ctx.tools.lookup_order(action["order_id"])
         pol = H.effective_policy(ctx.tools.lookup_policies(), ctx.as_of)
-        parcel = next((p for p in (order or {"parcels": []})["parcels"] if p["parcel_id"] == action.get("parcel_id")), None)
-        if order is None or pol is None or parcel is None:
-            return Verdict.deny("không xác minh được bưu kiện trong DB: không ghi lỗi hãng")
-        if not H.carrier_at_fault(pol, parcel, H.db_delay_days(parcel, ctx.as_of)):
-            ctx.log("fault_gate", reason="db_does_not_support_fault", parcel_id=parcel["parcel_id"])
-            return Verdict.deny("DB không xác nhận hãng có lỗi: không ghi lỗi hãng")
+        if order is None or pol is None:
+            return Verdict.deny("không xác minh được đơn/chính sách trong DB: không ghi lỗi hãng")
+        status, parcel = _fault_target(ctx, order, pol)
+        if status != "ok":
+            ctx.log("fault_gate", reason="db_does_not_support_fault", status=status)
+            return Verdict.deny("DB không xác nhận một kiện nào có lỗi hãng rõ ràng: không ghi lỗi hãng")
+        if parcel["parcel_id"] != action.get("parcel_id"):
+            ctx.log("fault_gate", reason="redirect_to_delayed_parcel", was=action.get("parcel_id"), now=parcel["parcel_id"])
+        return Verdict.modify("ghi lỗi cho đúng kiện trễ theo DB", parcel_id=parcel["parcel_id"], carrier_id=parcel["carrier_id"],
+                              driver_id=parcel.get("driver_id"), delay_days=H.db_delay_days(parcel, ctx.as_of))
 
     # Cổng 3 (B4 PERTURBED / pre-mortem pháp lý): dữ liệu gửi bên thứ ba chỉ gồm các trường cho phép.
     if tool == "notify_carrier":
