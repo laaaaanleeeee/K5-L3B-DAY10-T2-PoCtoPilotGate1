@@ -45,9 +45,9 @@ Vai Kỹ sư cổng (trưởng nhóm). Phiếu A câu 1.3; Phiếu B câu 2.1, 2
 
 ### Exit ticket
 
-Một điều học được: ...
+Một điều học được: Một cổng tốt phải lấy nguồn sự thật từ dữ liệu của hệ thống, không lấy từ chữ khách viết, và phải chọn đúng đơn vị mà người trong nghề dùng. Ở thẻ S6, trợ lý ghi lỗi theo đơn (parcels[0]) trong khi hãng vận chuyển tính lỗi theo kiện. Cổng vòng 1 chỉ so tiền với quyền lợi của kiện trễ nhất nên chỉ đỡ được lỗi oan từ 40 xuống 10. Sau khi đổi sang xác định đúng kiện, chuyển người khi không rõ, và đặt trần 2 lỗi/hãng/ngày, lỗi oan về 0 mà bộ nền vẫn đạt 65/65.
 
-Một điều còn chưa chắc: ...
+Một điều còn chưa chắc: Cổng của mình tin tracking DB. Nếu ngày giao hoặc nguyên nhân do máy quét hay người nhập tay bị sai thì cổng vẫn ghi sai, nên đây chỉ là giảm chứ chưa ngăn hẳn. Mình cũng chưa chắc ROI sau sửa (0,34, gần ngưỡng đã ký 0,15) có giữ được khi tải thật, vì nhiều ca bị chuyển người hơn. Dữ liệu ở đây là mock nên cần đo lại trong pilot.
 
 ## LuongThiHongHanh-2A202603748
 
