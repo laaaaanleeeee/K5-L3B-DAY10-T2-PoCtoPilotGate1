@@ -1,5 +1,5 @@
 {
- "collected_at": "2026-11-19T17:12:14",
+ "collected_at": "2026-11-19T17:35:50",
  "incident": null,
  "run_ids": {},
  "grade_run_id": null,
@@ -12,7 +12,7 @@
   "config/acceptance_criteria.json": "0e5def746d548634fb3fe49a2ff35c49217bdb10f0fbbf94bd4c1e1ae0ba6338",
   "config/operating_gates.json": "fd727622f9d568c3c9363f90f5869775597efc2090f47d212127a06379152ebf",
   "config/switches.json": "7f6b75433f65640f6610a7930ecefae27fc8b1891634803815ef48d9c4a0b457",
-  "docs/form-a-criteria.md": "e2050d58bcad8ad8c307809ce964fab0747cd201c83c74d9cfda8178dec83790",
+  "docs/form-a-criteria.md": "089af47a0ec9896b533439bf9437f3e4e0840a069f22ea8a00cf6189c95577f8",
   "docs/form-b-evaluation-gates.md": "7c64c910a7acc67da43ed20e2fae5480a56debcd3e037c8ab39087d85072a9ca",
   "docs/form-c-incident.md": "0dad0e32e90b301f560c16912211642e113fbd7e8f090c092c106649f8c6fa2d",
   "submission.json": "a669a989c69104280a2d43926b2be95e63ef0f8427344036660e1552f1553d88"

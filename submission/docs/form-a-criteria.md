@@ -55,6 +55,15 @@ trợ lý có đang gây thiệt hại cho bên ngoài LogiX không; không có 
 | **Khung thời gian / ngưỡng báo động** | (không áp dụng) | Cửa sổ 1 ca 8 giờ hoặc 1 ngày vận hành; bất kỳ sự kiện PII/hãng oan hoặc vượt trần là Đỏ ngay; chờ >60 phút là Đỏ |
 | **Điểm mù** (thước đo này KHÔNG thấy gì) | Không phát hiện tự động lỗi thực tế trong dữ liệu tracking hoặc chính sách bên ngoài chưa được nạp vào trace | Không có nhãn trước từ khách/hãng; không biết thiệt hại chưa được báo cáo và không phát hiện PII đã rời hệ thống nếu kênh bên thứ ba không gửi telemetry |
 
+#### Câu 1.4 · Câu trả lời telemetry production đầy đủ
+
+- **Bước/hành vi cần theo dõi:** toàn luồng ghi tiền, ghi lỗi hãng và gửi thông tin cho hãng vận chuyển; đồng thời ghi thời điểm ticket vào hàng chờ người duyệt.
+- **Tín hiệu thay nhãn:** tổng `wrongful_refund_vnd`, tổng `wrongful_carrier_faults`, tổng `pii_leaks` và số ticket bị ùn sau 60 phút. Không cần nhãn đúng/sai để báo động ngay khi bất kỳ ba chỉ số thiệt hại tăng hoặc hàng chờ vượt SLA.
+- **Dữ liệu lấy ở đâu:** audit trace của trợ lý, ledger, fault rows, payload `notify_carrier`, hàng chờ người duyệt và khiếu nại phản hồi từ khách/hãng.
+- **Cách tính:** cộng thiệt hại theo ngày vận hành; ví dụ `pii_leaks = số payload gửi ra ngoài có name/phone/street`; `wrongful_carrier_faults = số fault_rows bị xác nhận là không thuộc lỗi hãng`; `queue_stuck = số ticket chờ người duyệt quá 60 phút`. Thiếu dữ liệu telemetry thì đánh dấu “không thể xác nhận”, không tự coi là bằng 0.
+- **Khung thời gian và ngưỡng:** theo ca 8 giờ và tổng kết cuối ngày. Báo **Đỏ ngay** nếu PII leak ≥1, hoàn sai >0 VND, ghi lỗi hãng oan ≥1 hoặc có hàng chờ quá SLA.
+- **Điểm mù:** khách/hãng có thể chưa báo thiệt hại; kênh bên thứ ba cần telemetry riêng để xác nhận PII đã nhận và thiệt hại thực đã xảy ra.
+
 **Ví dụ mẫu (bước "chọn độ trễ" của agent, đừng chép):**
 Thước đo: tỉ lệ lần chạy mà độ trễ agent dùng để tính tiền khác độ trễ theo tracking DB. Dữ liệu: sự kiện `proposal.delay_days_used`
 và `tracking.db_delay_days` trong `runs/<mã lần chạy>/traces/`, 22 ticket × 5 seed của bộ nền. Cách tính: số lần hai giá trị khác
