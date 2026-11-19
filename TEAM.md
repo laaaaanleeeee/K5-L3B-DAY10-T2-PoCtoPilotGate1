@@ -55,4 +55,32 @@ Một điều còn chưa chắc: Cổng của mình tin tracking DB. Nếu ngày
 
 ## VuongQuangThang-2A202603855
 
-*(Thắng tự viết mục này theo mẫu ở trên: phần việc, đóng góp cụ thể, bằng chứng, exit ticket.)*
+## VuongQuangThang-<MSSV>
+
+### Phần việc phụ trách
+
+- **Vai trong bàn:** Sản phẩm và kinh doanh[cite: 2, 7].
+- **Câu trong đề & mục phiếu:**
+  - **Phiếu A (`templates/form-a-criteria.md`):** Mục A1 (Câu 1.1), cùng bàn chốt Mục A3 (Câu 1.5), Mục A4 (Câu 1.6 — câu tiêu chí, ranh giới đầu ra, 4 câu soát, ngưỡng `business_ops`), và soát ký Mục A5[cite: 2, 10].
+  - **Phiếu B (`templates/form-b-evaluation-gates.md`):** Mục B3 (Câu 2.3 — bản đồ dữ liệu và ví dụ drift), cùng bàn làm Mục B6 (Câu 2.5 — pre-mortem 4 lăng kính), Mục B7.4 (Câu 2.9 — cổng kinh doanh), và chủ trì phần kinh doanh ở Mục B8 (quyết định Gate 1 · v1)[cite: 2, 11].
+  - **Phiếu C (`templates/form-c-incident.md` — Thẻ S6):** Mục C1 (đọc chỉ số kinh doanh/vận hành mốc `prepared`), Mục C5 (Câu 3.2 — specification cho thẻ S6), cùng bàn dựng Mục C6 (Câu 3.4 — fault tree trước khi sửa), Mục C7 (rà soát cổng kinh doanh vòng 2), và chủ trì Mục C12 (quyết định Gate 1 · v2 và 3 dòng bắt buộc)[cite: 2, 12].
+- **File code / config phụ trách:** `config/acceptance_criteria.json`, `config/operating_gates.json` (mục `business`), tham gia rà soát `submission/submission.json` (mục `decision_v1`, `decision_v2`, `three_lines`)[cite: 2, 3, 7].
+
+### Đóng góp cụ thể
+
+- Xác định mục tiêu cấp hệ thống của trợ lý hoàn tiền LogiX-VN từ PRD v1.1 §3[cite: 2, 9]; thiết lập và thống nhất bộ ngưỡng chấp nhận (`pass_rate_min = 0.9`, `pass_k_min = 0.8`, các chỉ số an toàn = `0`, `escalation_rate_max = 0.35`, `cost_per_ticket_vnd_max = 8500`, `roi_min = 0.15`, `queue_stuck_max = 0`), điều kiện dừng và 4 quy tắc ra quyết định trong `config/acceptance_criteria.json` trước khi chạy đánh giá[cite: 2, 3].
+- Xây dựng bản đồ dữ liệu từ `data/world.json` và phân tích kịch bản concept drift khi chuyển chính sách từ `REFUND-v3` sang `REFUND-v4` ngày `2026-12-01`[cite: 2, 14].
+- Thiết lập các ngưỡng cổng kinh doanh trong `config/operating_gates.json` (`daily_refund_cap_vnd = 2000000`, `cost_budget_per_ticket_vnd = 8500`, giới hạn `pilot_scope` ở 2 kho đơn lẻ `HN`, `HCM` và loại trừ kho sỉ `HCM-B2B`, `roi_min = 0.15`) kèm lập luận từ `ops_limits` và `ops_facts`[cite: 2, 14].
+- Phân tích sự cố thẻ S6 (quy nhầm lỗi kiện/hãng trên đơn nhiều kiện), viết specification kiểm soát tính đúng đắn giữa `parcel_id` và `carrier_id`, đối chiếu số liệu chi phí/ROI qua 3 mốc `base · prepared · after` để chốt quyết định v1, v2 và 3 dòng bắt buộc[cite: 2, 12].
+- **Ghi nhận sử dụng AI:** Có sử dụng trợ lý AI để rà soát cấu trúc phiếu A/B/C, đối chiếu tính nhất quán logic giữa `stop_condition` và `decision_rule`, và biên tập câu chữ; toàn bộ ngưỡng số liệu, lập luận từ `data/world.json` và quyết định Gate 1 đều do nhóm tự tính toán, kiểm chứng trên report và chịu trách nhiệm[cite: 5].
+
+### Bằng chứng
+
+-- Commit: `97629a9` (ký tiêu chí), `f5302cf`, `3db5465`
+- Mã lần chạy: base `R-base-before-20261119-202059-bde05c`, prepared `R-base-prepared-20261119-211733-0d6a5f`; thẻ S6 base `R-S6-before-20261119-214310-65e7cb`, prepared `R-S6-prepared-20261119-214310-65e7cb`, after `R-S6-after-20261119-214310-65e7cb`.
+- **Dòng trong phiếu:** Phiếu A (mục A1, A3, A4, A5), Phiếu B (mục B3, B6, B7.4, B8 cột v1), Phiếu C (mục C1, C5 câu 3.2, C6, C7, C12 cột v2 và 3 dòng bắt buộc)[cite: 7, 10, 11, 12].
+
+### Exit ticket
+
+- **Một điều học được:** Việc ký cứng tiêu chí chấp nhận và chốt các ngưỡng kinh doanh/vận hành (trần hoàn tiền ngày, chi phí mỗi ticket, ROI, phạm vi kho) *trước* khi xem kết quả chạy giúp tránh thiên lệch điều chỉnh ngưỡng theo số đẹp, đồng thời cho thấy nhiều sự cố sau PoC bắt nguồn từ giả định dữ liệu/nghiệp vụ (như đơn nhiều kiện nhiều hãng) chứ không chỉ nằm ở prompt hay model[cite: 2, 3, 7].
+- **Một điều còn chưa chắc:** Vì toàn bộ đánh giá đang dùng MockLLM và dữ liệu giả lập trong `world.json`, mức chi phí LLM thực tế theo độ dài hội thoại phát sinh và tần suất xuất hiện các ca ngoại lệ ngoài bộ test khi mở rộng sang nhiều kho hơn vẫn cần đo lại thực nghiệm trong giai đoạn pilot[cite: 7, 12, 14].
