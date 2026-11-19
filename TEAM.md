@@ -13,10 +13,9 @@ Họ tên đầy đủ và MSSV của **mọi** thành viên; bàn 3 người th
 
 | STT | Họ và tên | MSSV | Vai | Trưởng nhóm |
 | --: | --------- | ---- | --- | :---------: |
-|   1 |Lương Thị Hồng Hạnh|2A202603748|Vận hành và pháp lý|             |
-|   2 |           |      |     |             |
-|   3 |           |      |     |             |
-|   4 |           |      |     |             |
+|   1 | Lê Hải Lân | 2A202603915 | Kỹ sư cổng  |    x         |
+|   2 | Lương Thị Hồng Hạnh |2A202603748| Vận hành và pháp lý |             |
+|   3 | Vương Quang Thắng  | 2A202603855  | Sản phẩm và kinh doanh  |             |
 
 Ghi `members` trong `submission/submission.json` theo dạng `"HoVaTen-MSSV"`, khớp bảng trên.
 
