@@ -113,34 +113,26 @@ tín hiệu: đếm sự kiện `model_override` mỗi ngày.
 
 ## B3 · Câu 2.3 · Bản đồ dữ liệu của trợ lý và ví dụ drift
 
-**Cách làm:** đi từ người dùng và việc họ cần làm, tới đầu ra của hệ thống, rồi mới hỏi hệ thống cần dữ liệu
-gì, định dạng ra sao, và **thế giới thật làm dữ liệu đó lệch đi thế nào**; cuối cùng tóm lại trong vài câu.
-Trợ lý LogiX không huấn luyện gì trong lab này, nên ta hỏi về "dữ liệu trợ lý đọc lúc chạy / trường then chốt / nguồn sự thật".
-Gợi ý: mở `data/world.json` phần `policies`, `orders[].parcels`, `ops_limits`, `ops_facts`.
-
 | Mục | Điền cho trợ lý hoàn tiền |
 |---|---|
-| Người dùng | |
-| Việc người dùng cần làm xong | |
-| Đầu ra của hệ thống (kể cả các lệnh ghi) | |
-| Dữ liệu trợ lý đọc lúc chạy (bảng nào trong `data/world.json`) | |
-| Trường then chốt quyết định tiền và lỗi hãng | |
-| Với mỗi trường then chốt: **nguồn sự thật** hay **bản sao** (ai cập nhật, khi nào)? | |
-| Định dạng cần để ý (ngày, trường được phép trống, đơn nhiều kiện) | |
-| Thế giới thật làm dữ liệu lệch ở đâu (theo mùa, đổi chính sách, giờ cao điểm, người nhập tay)? | |
-| Câu người ngoài sẽ hỏi về nguồn dữ liệu ("sao hệ thống biết đơn trễ mấy ngày?") | |
+| Người dùng | Khách hàng B2C đặt đơn nội địa gửi khiếu nại giao trễ; gián tiếp là nhân viên/trưởng ca CSKH (`NV-HANH`), kế toán đối soát (`NV-OANH`) và các hãng vận chuyển (`GHSH`, `VNX`, `LGX`, `MKD`, `DNB`). |
+| Việc người dùng cần làm xong | Khách nhận được khoản hoàn phí ship/bồi thường đúng chính sách nếu đơn trễ hợp lệ; kế toán khớp được sổ cái và phiếu phạt hãng; trưởng ca CSKH chỉ phải duyệt các ca vượt ngưỡng rủi ro. |
+| Đầu ra của hệ thống (kể cả các lệnh ghi) | Câu trả lời phản hồi khách (`send_reply`), bút toán hoàn tiền vào sổ cái (`issue_refund`), bản ghi phạt lỗi cho hãng (`file_carrier_fault`), thông báo gửi hãng (`notify_carrier`), hoặc chuyển hàng chờ người duyệt. |
+| Dữ liệu trợ lý đọc lúc chạy (bảng nào trong `data/world.json`) | `orders` (và `orders[].parcels`), `customers`, `merchants`, `carriers`, `warehouses`, `policies`, `approvals`, `ledger_seed`, cùng các giới hạn vận hành trong `ops_limits`, `ops_facts`. |
+| Trường then chốt quyết định tiền và lỗi hãng | `orders[].shipping_fee_vnd`, `orders[].goods_value_vnd`, `orders[].refund_status`, `orders[].warehouse_id`, `orders[].is_gift`, `parcels[].promised_date`, `parcels[].delivered_date`, `parcels[].status`, `parcels[].delay_cause`, `parcels[].carrier_id`, `policies[].auto_limit_vnd`, `policies[].fault_causes`, `approvals[].status` & `expires_at`. |
+| Với mỗi trường then chốt: **nguồn sự thật** hay **bản sao** (ai cập nhật, khi nào)? | `orders`, `parcels`, `ledger_seed`, `approvals`: nguồn sự thật trong DB nội bộ LogiX (hệ thống đơn hàng, máy quét giao nhận, kế toán và trưởng ca `NV-HANH` cập nhật theo sự kiện). `policies`: nguồn sự thật quy tắc nghiệp vụ do Sản phẩm/Vận hành ban hành. Nội dung khách viết trong ticket chỉ là lời khai đầu vào, không phải nguồn sự thật. |
+| Định dạng cần để ý (ngày, trường được phép trống, đơn nhiều kiện) | Ngày chuẩn `YYYY-MM-DD`; trường được phép `null` khi hàng chưa giao hoặc không trễ (`delivered_date: null`, `status: IN_TRANSIT` ở `O-1011`, `O-1014`; `delay_cause: null` ở `O-1010`); đơn nhiều kiện (`O-1013` có 2 kiện `O-1013-P1` trễ và `O-1013-P2` đúng hạn); đơn quà tặng (`is_gift: true` ở `O-1024`, `O-1026` có `recipient` khác `customer`). |
+| Thế giới thật làm dữ liệu lệch ở đâu (theo mùa, đổi chính sách, giờ cao điểm, người nhập tay)? | (1) Đổi phiên bản chính sách theo mốc ngày (`REFUND-v3` hết hạn `2026-11-30`, `REFUND-v4` hiệu lực từ `2026-12-01`); (2) Mùa mưa bão hoặc cao điểm sale làm tăng đột biến đơn trễ do bất khả kháng (`FORCE_MAJEURE`) và số ticket dồn theo giờ; (3) Bưu tá/điều phối nhập tay hoặc cập nhật muộn `delivered_date`, `delay_cause`; (4) Mã duyệt bị dùng lại hoặc hết hạn (`A-0031` trạng thái `used`, `expires_at: 2026-10-01`). |
+| Câu người ngoài sẽ hỏi về nguồn dữ liệu ("sao hệ thống biết đơn trễ mấy ngày?") | Hãng vận chuyển và khách hỏi: "Căn cứ vào mốc thời gian nào trong tracking DB để tính số ngày trễ và quy lỗi `CARRIER`, khi tài xế chưa quét giao xong (`delivered_date = null`) hoặc đơn có nhiều kiện giao khác ngày?" |
 
 **Tóm lại (điền vào chỗ trống):**
-Trợ lý dùng `__________`, `__________`, `__________` để giúp `__________` làm được `__________`.
-Trường mà nếu sai thì tiền hoặc lỗi hãng sai theo: `__________`, `__________`.
-Chúng tôi biết thế giới thật sẽ làm dữ liệu lệch ở: `__________`. Dấu hiệu nhìn thấy sớm nhất: `__________`.
+Trợ lý dùng `orders[].parcels`, `policies`, `approvals / ledger_seed` để giúp `khách hàng B2C, trưởng ca CSKH (NV-HANH) và kế toán đối soát (NV-OANH)` làm được `xử lý hoàn tiền giao trễ, ghi sổ cái và quy trách nhiệm hãng vận chuyển chính xác`.
+Trường mà nếu sai thì tiền hoặc lỗi hãng sai theo: `parcels[].delivered_date` (và `promised_date`), `parcels[].delay_cause` (và `policies[].auto_limit_vnd`).
+Chúng tôi biết thế giới thật sẽ làm dữ liệu lệch ở: `thời điểm chuyển đổi chính sách REFUND-v3 sang REFUND-v4 (2026-12-01), các đơn chưa giao xong (delivered_date = null) / đơn nhiều kiện, và việc nhân viên hoặc khách nhập lệch thông tin`. Dấu hiệu nhìn thấy sớm nhất: `tỉ lệ chênh lệch giữa số ngày trễ / khoản hoàn đề xuất với dữ liệu tracking DB và sự gia tăng ca bị từ chối hoặc khiếu nại đối soát từ hãng vận chuyển`.
 
-**Ví dụ drift trong 3 tháng tới** (lấy từ dòng "thế giới thật làm dữ liệu lệch"): cái gì đổi `____` · đổi ngày nào `____` ·
-trường nào cho thấy `____` · con số nào của Bản tiêu chí bị ảnh hưởng `____`.
-Đây là đầu vào đổi hay quan hệ vào–ra đổi? Chỉ số nào sẽ phát hiện? `__________`
-
-**Ví dụ một dòng (đừng chép):** trường then chốt `parcels[].delivered_date` · bản ghi do máy quét ở điểm phát tạo ra, là nguồn
-sự thật về ngày giao · lệch khi điểm phát quét sót hoặc nhập bù bằng tay.
+**Ví dụ drift trong 3 tháng tới** (lấy từ dòng "thế giới thật làm dữ liệu lệch"): cái gì đổi `chính sách hoàn tiền chuyển từ REFUND-v3 sang REFUND-v4 (giảm ngưỡng trễ tối thiểu từ 3 xuống 2 ngày, giảm hạn mức hoàn tự động từ 200.000đ xuống 100.000đ, và bỏ FORCE_MAJEURE khỏi danh sách fault_causes phạt lỗi hãng)` · đổi ngày nào `2026-12-01` ·
+trường nào cho thấy `policies[].policy_id`, `effective_from`, `index_active`, `auto_limit_vnd`, `fault_causes` và `parcels[].delay_cause` · con số nào của Bản tiêu chí bị ảnh hưởng `wrongful_carrier_faults_max (ghi lỗi oan cho hãng với ca FORCE_MAJEURE), wrongful_refund_vnd_max (hoàn vượt hạn mức tự động 100.000đ), pass_rate_min, pass_k_min và escalation_rate_max`.
+Đây là đầu vào đổi hay quan hệ vào–ra đổi? Chỉ số nào sẽ phát hiện? `Chủ yếu là quan hệ vào–ra đổi (concept drift) vì cùng một đơn trễ do FORCE_MAJEURE hoặc hoàn 150.000đ nhưng từ 2026-12-01 quy tắc đầu ra đổi từ tự động hoàn + phạt hãng sang không phạt hãng và phải chuyển người duyệt (kèm đầu vào đổi khi số ca đủ điều kiện hoàn tăng do hạ ngưỡng trễ từ 3 xuống 2 ngày). Phát hiện qua chỉ số wrongful_carrier_faults, wrongful_refund_vnd, pass_rate, pass_k, escalation_rate trong report đánh giá định kỳ và metric theo dõi ca FORCE_MAJEURE / ca chạm hạn mức chính sách.`
 
 ---
 
@@ -251,12 +243,11 @@ Bốn lăng kính (bắt buộc đủ cả bốn; dự án AI hay chết ở ba 
 
 | Lý do thất bại (viết ở thì quá khứ) | Lăng kính | Kiểm được hôm nay? (trace / data / config nào) | Thành cổng phòng ngừa nào (code hay config) / hay vào risk register |
 |---|---|---|---|
-| | Kỹ thuật | | |
-| | Kinh doanh | | |
-| | Con người và vận hành | | |
-| | Pháp lý | | |
-| | | | |
-
+| Trợ lý tin vào số ngày trễ hoặc số tiền khách tự khai trong nội dung ticket thay vì đối chiếu tracking DB (`orders[].parcels`) và bảng `policies` (`REFUND-v3`), hoặc dùng nhầm mã phê duyệt đã sử dụng/hết hạn (`A-0031`), dẫn đến hoàn sai tiền và ghi lỗi oan cho hãng. | Kỹ thuật | Trace các ca khách khai lệch DB (như `T-002@55`), bảng `orders[].parcels`, `policies`, `approvals`. | **[Chọn làm Cổng phòng ngừa 1 · Code `write_gate`]** Đối chiếu `issue_refund` và `file_carrier_fault` với tracking DB, chính sách `REFUND-v3` và trạng thái `approvals` (`valid`, chưa hết hạn). |
+| Trợ lý tự động hoàn vượt hạn mức chính sách `200.000đ/đơn`, hoàn lặp cho đơn đã hoàn (`O-1017` có `refund_status = REFUNDED`), xử lý cả đơn sỉ kho `HCM-B2B` (giá trị từ 2 triệu đồng) hoặc đẩy tổng hoàn tự động trong ngày vượt trần `2.000.000đ` của Finance. | Kinh doanh | `orders[].refund_status`, `warehouses` (`HCM-B2B`), `ops_limits.daily_auto_refund_budget_vnd`, report khối kinh doanh & vận hành. | **[Chọn làm Cổng phòng ngừa 2 · Code `write_gate` + Config `business`]** Chặn hoàn lặp đơn `REFUNDED`, giới hạn `pilot_scope` ở kho đơn lẻ (`HN`, `HCM`), và chuyển người duyệt khi vượt `200.000đ/đơn` hoặc `daily_refund_cap_vnd = 2.000.000đ`. |
+| Chỉ bố trí 1 người trực duyệt (`NV-HANH`, công suất `6 ca/giờ` theo `ops_facts`), nên khi tỉ lệ chuyển duyệt cao hoặc lượng ticket dồn gấp ba vào giờ cao điểm, hàng chờ vượt SLA `60 phút`, làm chi phí mỗi ticket vượt mức làm tay `10.000đ`. | Con người và vận hành | `ops_facts` (`default_reviewers_on_shift = 1`, `review_capacity_per_reviewer_per_hour = 6`), `ops_limits.review_sla_minutes = 60`, report khối vận hành. | **Config `operations` + Runbook (và đưa vào Risk register):** Đặt `max_queue_wait_minutes = 60`, `reviewers_on_shift` trong `config/operating_gates.json` và quy trình gọi thêm người giờ cao điểm ở Runbook 1–3. |
+| Trợ lý gửi kèm thông tin cá nhân (tên, SĐT, địa chỉ của khách hàng hoặc người nhận đơn quà tặng `is_gift = true` như `O-1024`, `O-1026`) trong thông báo gửi hãng, hoặc ghi lỗi hãng khi `delay_cause` là `CUSTOMER_ABSENT` (`O-1005`) / `MERCHANT_HANDOVER` (`O-1007`), khiến đối tác nhỏ như `GHSH`, `DNB` bị phạt oan `80.000–150.000đ/lỗi` và bị đình chỉ sau `3 lỗi/7 ngày`. | Pháp lý | `orders[].is_gift`, `policies[].carrier_notice_fields`, `parcels[].delay_cause`, `carriers`. | **[Chọn làm Cổng phòng ngừa 3 · Code `write_gate` + Config `legal`]** Khóa whitelist 4 trường gửi hãng (`order_id`, `parcel_id`, `district`, `delay_days`) và chỉ cho ghi lỗi hãng khi `delay_cause` nằm trong `fault_causes` hợp lệ. |
+| Trợ lý thiếu ghi chú giải thích rõ ràng (`decision_note`) hoặc để lọt lỗi trong giai đoạn đầu khiến nhân viên CSKH mất lòng tin, quay lại kiểm tra thủ công 100% quyết định tự động (`staff_behavior`), làm đội chi phí nhân sự và triệt tiêu hoàn toàn ROI của pilot. | Con người và vận hành | `staff_behavior.trust_conditions` (`decision_note`, `min_sampling_pct = 10`, `approver_id = NV-HANH`). | **→ Đưa vào Risk register** (theo dõi tỉ lệ chuyển duyệt, kiểm mẫu và yêu cầu bổ sung ghi chú giải thích cho quyết định tự động). |
 ---
 
 <a id="b7"></a>
@@ -310,10 +301,10 @@ Mỗi con số kèm một câu lý do, lấy từ `data/world.json` → `ops_lim
 
 | Khoá | Giá trị bàn đặt | Lý do (một câu, có số) |
 |---|---|---|
-| `business.daily_refund_cap_vnd` | | |
-| `business.cost_budget_per_ticket_vnd` | | |
-| `business.pilot_scope` (all / warehouse / percent) | | |
-| `business.roi_min` | | |
+| `business.daily_refund_cap_vnd` | `2000000` | Đặt bằng trần ngân sách hoàn tự động mỗi ngày đã thống nhất với Finance tại `ops_limits.daily_auto_refund_budget_vnd = 2.000.000đ` để ngăn rủi ro thất thoát tiền vượt ngân sách ngày[cite: 14]. |
+| `business.cost_budget_per_ticket_vnd` | `8500` | Khớp ngưỡng `cost_per_ticket_vnd_max = 8.500đ` đã ký, bảo đảm rẻ hơn chi phí làm tay `10.000đ/ticket` (`ops_facts.manual_cost_per_ticket_vnd`) tối thiểu 15% sau khi tính cả trần phí LLM `1.500đ/ticket` và phí giữ chỗ người trực `30.000đ/ca`[cite: 14]. |
+| `business.pilot_scope` (all / warehouse / percent) | Giới hạn 2 kho đơn lẻ `["HN", "HCM"]` (loại trừ `HCM-B2B`) | Bám đúng mục tiêu pilot tại 2 depot trên khách hàng B2C đơn lẻ (`HN`, `HCM` trong `warehouses`) và loại trừ kho sỉ `HCM-B2B` có giá trị đơn từ `2.000.000đ` vốn luôn vượt hạn mức hoàn tự động `200.000đ/đơn` của chính sách `REFUND-v3`[cite: 2, 14]. |
+| `business.roi_min` | `0.15` | Khớp với ngưỡng `roi_min = 0,15` (15%) đã ký trong Bản tiêu chí, tương ứng mức tiết kiệm ròng tối thiểu `1.500đ/ticket` so với chi phí xử lý thủ công `10.000đ/ticket` ở `ops_facts.manual_cost_per_ticket_vnd`[cite: 14]. |
 
 ### B7.5 · Câu 2.10 · Cổng con người, vận hành, pháp lý + Runbook phần 1–3
 
