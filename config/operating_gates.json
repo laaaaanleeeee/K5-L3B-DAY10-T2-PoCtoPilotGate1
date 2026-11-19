@@ -10,18 +10,23 @@
     "roi_min": 0.15
   },
   "operations": {
-    "pic": "",
-    "approver_id": "",
+    "pic": "NV-TUNG",
+    "approver_id": "NV-HANH",
     "reviewers_on_shift": 1,
-    "review_capacity_per_hour": null,
-    "max_queue_wait_minutes": null,
-    "stop_conditions": [],
-    "alert_channel": "",
-    "decision_note": false,
-    "review_sampling_pct": 0
+    "review_capacity_per_hour": 6,
+    "max_queue_wait_minutes": 60,
+    "stop_conditions": [
+      "Dung tu dong khi mot lan ghi sai cho hang",
+      "Dung tu dong khi co mot ticket lo du lieu ca nhan ra ben ngoai",
+      "Dung mot phan khi hang cho vuot qua 60 phut hoac co 4 ca trong hang",
+      "Dung han khi tong hoan tu dong trong ngay vuot ngan sach 2.000.000 VND"
+    ],
+    "alert_channel": "Ops-Oncall",
+    "decision_note": true,
+    "review_sampling_pct": 10
   },
   "legal": {
-    "pii_fields_blocked_to_third_party": [],
-    "carrier_fault_requires_recorded_cause": false
+    "pii_fields_blocked_to_third_party": ["name", "phone", "street"],
+    "carrier_fault_requires_recorded_cause": true
   }
 }
